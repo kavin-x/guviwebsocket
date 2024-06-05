@@ -1,6 +1,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 const http = require('http');
+const { v4: uuidv4 } = require('uuid'); // For generating unique IDs
 
 const app = express();
 const port = 3000;
@@ -11,27 +12,45 @@ const server = http.createServer(app);
 // Initialize the WebSocket server instance
 const wss = new WebSocket.Server({ server });
 
-wss.on('connection', (ws) => {
-    console.log('Client connected');
+// Store clients in a Map
+const clients = new Map();
 
-    // Send a welcome message
-    ws.send('Welcome to the WebSocket server!');
+wss.on('connection', (ws) => {
+    const id = uuidv4(); // Generate a unique ID for the client
+    clients.set(id, ws);
+    console.log(`Client connected: ${id}`);
+
+    // Send a welcome message with the client ID
+    ws.send(`Welcome to the WebSocket server! Your ID is ${id}`);
 
     // Receiving messages from the client
     ws.on('message', (message) => {
-        console.log('Received:', message);
+        console.log(`Received from ${id}:`, message);
 
-        // Broadcast the message to all clients
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(`Broadcast: ${message}`);
-            }
-        });
+        // Extract target client ID and message from the received message
+        let parsedMessage;
+        try {
+            parsedMessage = JSON.parse(message);
+        } catch (e) {
+            console.error('Invalid message format', message);
+            return;
+        }
+
+        const targetId = parsedMessage.targetId;
+        const msg = parsedMessage.message;
+
+        // Send the message to the target client if it exists
+        if (clients.has(targetId)) {
+            clients.get(targetId).send(`Message from ${id}: ${msg}`);
+        } else {
+            ws.send(`Client with ID ${targetId} does not exist`);
+        }
     });
 
     // Handle client disconnection
     ws.on('close', () => {
-        console.log('Client disconnected');
+        clients.delete(id);
+        console.log(`Client disconnected: ${id}`);
     });
 
     // Handle errors
