@@ -40,7 +40,7 @@ wss.on('connection', (ws) => {
 
             // Send the message to the target client if it exists
             if (clients.has(targetId)) {
-                clients.get(targetId).send(require('msgpack-lite').encode({ message: `Message from ${clientId}: ${msg}` }));
+                clients.get(targetId).send(require('msgpack-lite').encode({ msg}));
             } else {
                 ws.send(require('msgpack-lite').encode({ error: `Client with ID ${targetId} does not exist` }));
             }

@@ -38,8 +38,54 @@
         });
 
         document.getElementById('sendBtn').addEventListener('click', () => {
+            let data = {
+  "mode": "Crab",
+  "program": {
+    "setup": {
+      "0": {
+        "pinsetup": {
+          "pinumber": "34",
+          "mode": "OUTPUT"
+        }
+      },
+      "1": {
+        "botcmd": {
+          "cmd": "move_forward",
+          "steps": "10"
+        }
+      }
+    },
+    "loop": {
+      "0": {
+        "if": {
+          "cond": {
+            "sensor": "US1",
+            "operator": "EQ",
+            "value": "IR1"
+          },
+          "tcmd": {
+            "0": {
+              "serialp": {
+                "value": {
+                  "TEXT": ""
+                }
+              }
+            }
+          },
+          "ecmd": {}
+        }
+      },
+      "1": {
+        "botcmd": {
+          "cmd": "move_right",
+          "steps": "10"
+        }
+      }
+    }
+  }
+}
             if (ws && ws.readyState === WebSocket.OPEN) {
-                const message = msgpack.encode({ targetId: '5618dda2918', message: 'Hello, target!' });
+                const message = msgpack.encode({ targetId: '5618dda2918', message: JSON.stringify(data) });
                 ws.send(message);
             } else {
                 console.log('WebSocket is not connected');
