@@ -19,7 +19,7 @@
 
             ws.onopen = () => {
                 console.log('Connected to WebSocket server');
-                const idMessage = msgpack.encode({ id: 'client-123' });
+                const idMessage = msgpack.encode({ id: '5618dda2918' });
                 ws.send(idMessage);
             };
 
