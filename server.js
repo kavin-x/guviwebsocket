@@ -1,7 +1,6 @@
 const express = require('express');
 const WebSocket = require('ws');
 const http = require('http');
-const { v4: uuidv4 } = require('uuid'); // For generating unique IDs
 
 const app = express();
 const port = 3000;
@@ -16,41 +15,50 @@ const wss = new WebSocket.Server({ server });
 const clients = new Map();
 
 wss.on('connection', (ws) => {
-    const id = uuidv4(); // Generate a unique ID for the client
-    clients.set(id, ws);
-    console.log(`Client connected: ${id}`);
+    let clientId = null;
 
-    // Send a welcome message with the client ID
-    ws.send(`Welcome to the WebSocket server! Your ID is ${id}`);
+    console.log('Client connected');
 
-    // Receiving messages from the client
+    // Handle initial message to set client ID
     ws.on('message', (message) => {
-        console.log(`Received from ${id}:`, message);
-
-        // Extract target client ID and message from the received message
-        let parsedMessage;
-        try {
-            parsedMessage = JSON.parse(message);
-        } catch (e) {
-            console.error('Invalid message format', message);
-            return;
-        }
-
-        const targetId = parsedMessage.targetId;
-        const msg = parsedMessage.message;
-
-        // Send the message to the target client if it exists
-        if (clients.has(targetId)) {
-            clients.get(targetId).send(`Message from ${id}: ${msg}`);
+        if (!clientId) {
+            try {
+                const parsedMessage = JSON.parse(message);
+                if (parsedMessage.id) {
+                    clientId = parsedMessage.id;
+                    clients.set(clientId, ws);
+                    ws.send(`Client ID ${clientId} registered successfully`);
+                    console.log(`Client ID ${clientId} registered`);
+                } else {
+                    ws.send('Error: No ID provided');
+                }
+            } catch (e) {
+                ws.send('Error: Invalid JSON format');
+            }
         } else {
-            ws.send(`Client with ID ${targetId} does not exist`);
+            try {
+                const parsedMessage = JSON.parse(message);
+                const targetId = parsedMessage.targetId;
+                const msg = parsedMessage.message;
+
+                // Send the message to the target client if it exists
+                if (clients.has(targetId)) {
+                    clients.get(targetId).send(`Message from ${clientId}: ${msg}`);
+                } else {
+                    ws.send(`Client with ID ${targetId} does not exist`);
+                }
+            } catch (e) {
+                ws.send('Error: Invalid JSON format');
+            }
         }
     });
 
     // Handle client disconnection
     ws.on('close', () => {
-        clients.delete(id);
-        console.log(`Client disconnected: ${id}`);
+        if (clientId) {
+            clients.delete(clientId);
+            console.log(`Client disconnected: ${clientId}`);
+        }
     });
 
     // Handle errors
