@@ -14,7 +14,7 @@
         let ws;
 
         document.getElementById('connectBtn').addEventListener('click', () => {
-            ws = new WebSocket('ws://localhost:3000');
+            ws = new WebSocket('wss://guviwebsocket.onrender.com:443');
             ws.binaryType = 'arraybuffer';
 
             ws.onopen = () => {

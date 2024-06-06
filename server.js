@@ -22,6 +22,7 @@ wss.on('connection', (ws) => {
 
     // Handle initial message to set client ID
     ws.on('message', (message) => {
+        console.log(message);
         const decodedMessage = require('msgpack-lite').decode(new Uint8Array(message));
 
         if (!clientId) {
