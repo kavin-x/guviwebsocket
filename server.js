@@ -1,6 +1,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 const http = require('http');
+const path = require('path');
 
 const app = express();
 const port = 3000;
@@ -21,34 +22,26 @@ wss.on('connection', (ws) => {
 
     // Handle initial message to set client ID
     ws.on('message', (message) => {
+        const decodedMessage = require('msgpack-lite').decode(new Uint8Array(message));
+
         if (!clientId) {
-            try {
-                const parsedMessage = JSON.parse(message);
-                if (parsedMessage.id) {
-                    clientId = parsedMessage.id;
-                    clients.set(clientId, ws);
-                    ws.send(`Client ID ${clientId} registered successfully`);
-                    console.log(`Client ID ${clientId} registered`);
-                } else {
-                    ws.send('Error: No ID provided');
-                }
-            } catch (e) {
-                ws.send('Error: Invalid JSON format');
+            if (decodedMessage.id) {
+                clientId = decodedMessage.id;
+                clients.set(clientId, ws);
+                ws.send(require('msgpack-lite').encode({ message: `Client ID ${clientId} registered successfully` }));
+                console.log(`Client ID ${clientId} registered`);
+            } else {
+                ws.send(require('msgpack-lite').encode({ error: 'No ID provided' }));
             }
         } else {
-            try {
-                const parsedMessage = JSON.parse(message);
-                const targetId = parsedMessage.targetId;
-                const msg = parsedMessage.message;
+            const targetId = decodedMessage.targetId;
+            const msg = decodedMessage.message;
 
-                // Send the message to the target client if it exists
-                if (clients.has(targetId)) {
-                    clients.get(targetId).send(`Message from ${clientId}: ${msg}`);
-                } else {
-                    ws.send(`Client with ID ${targetId} does not exist`);
-                }
-            } catch (e) {
-                ws.send('Error: Invalid JSON format');
+            // Send the message to the target client if it exists
+            if (clients.has(targetId)) {
+                clients.get(targetId).send(require('msgpack-lite').encode({ message: `Message from ${clientId}: ${msg}` }));
+            } else {
+                ws.send(require('msgpack-lite').encode({ error: `Client with ID ${targetId} does not exist` }));
             }
         }
     });
@@ -67,9 +60,12 @@ wss.on('connection', (ws) => {
     });
 });
 
+// Serve the HTML file
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Define a route for HTTP requests
 app.get('/', (req, res) => {
-    res.send('Hello from the HTTP server!');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start the server

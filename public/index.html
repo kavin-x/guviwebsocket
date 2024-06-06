@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>
+</head>
+<body>
+    <h1>WebSocket Client</h1>
+    <button id="connectBtn">Connect</button>
+    <button id="sendBtn">Send Message</button>
+    <script>
+        let ws;
+
+        document.getElementById('connectBtn').addEventListener('click', () => {
+            ws = new WebSocket('ws://localhost:3000');
+            ws.binaryType = 'arraybuffer';
+
+            ws.onopen = () => {
+                console.log('Connected to WebSocket server');
+                const idMessage = msgpack.encode({ id: 'client-123' });
+                ws.send(idMessage);
+            };
+
+            ws.onmessage = (event) => {
+                const decodedMessage = msgpack.decode(new Uint8Array(event.data));
+                console.log('Received:', decodedMessage);
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected from WebSocket server');
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        });
+
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const message = msgpack.encode({ targetId: '5618dda2918', message: 'Hello, target!' });
+                ws.send(message);
+            } else {
+                console.log('WebSocket is not connected');
+            }
+        });
+    </script>
+</body>
+</html>
