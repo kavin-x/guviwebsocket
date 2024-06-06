@@ -85,7 +85,7 @@
   }
 }
             if (ws && ws.readyState === WebSocket.OPEN) {
-                const message = msgpack.encode({ targetId: '5618dda2918', message: JSON.stringify(data) });
+                const message = msgpack.encode({ targetId: '5618dda2918', message: data });
                 ws.send(message);
             } else {
                 console.log('WebSocket is not connected');
