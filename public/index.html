@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebSocket Client</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>
 </head>
+
 <body>
     <h1>WebSocket Client</h1>
     <button id="connectBtn">Connect</button>
@@ -19,7 +21,7 @@
 
             ws.onopen = () => {
                 console.log('Connected to WebSocket server');
-                const idMessage = msgpack.encode({ id: '5618dda2918' });
+                const idMessage = msgpack.encode({ id: 'client-123' });
                 ws.send(idMessage);
             };
 
@@ -38,54 +40,24 @@
         });
 
         document.getElementById('sendBtn').addEventListener('click', () => {
-            let data = {
-  "mode": "Crab",
-  "program": {
-    "setup": {
-      "0": {
-        "pinsetup": {
-          "pinumber": "34",
-          "mode": "OUTPUT"
-        }
-      },
-      "1": {
-        "botcmd": {
-          "cmd": "move_forward",
-          "steps": "10"
-        }
-      }
-    },
-    "loop": {
-      "0": {
-        "if": {
-          "cond": {
-            "sensor": "US1",
-            "operator": "EQ",
-            "value": "IR1"
-          },
-          "tcmd": {
-            "0": {
-              "serialp": {
-                "value": {
-                  "TEXT": ""
+            let move_forward = {
+                "mode": "Crab",
+                "program": {
+                    "setup": {
+                        "1": {
+                            "botcmd": {
+                                "cmd": "move_forward",
+                                "steps": "10"
+                            }
+                        }
+                    },
+                    "loop": {
+                    }
                 }
-              }
             }
-          },
-          "ecmd": {}
-        }
-      },
-      "1": {
-        "botcmd": {
-          "cmd": "move_right",
-          "steps": "10"
-        }
-      }
-    }
-  }
-}
+
             if (ws && ws.readyState === WebSocket.OPEN) {
-                const message = msgpack.encode({ targetId: '5618dda2918', message: data });
+                const message = msgpack.encode({ targetId: '5618dda2918', message: move_forward });
                 ws.send(message);
             } else {
                 console.log('WebSocket is not connected');
@@ -93,4 +65,5 @@
         });
     </script>
 </body>
+
 </html>
